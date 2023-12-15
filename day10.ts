@@ -258,7 +258,7 @@ function search(start: Coord, grid: string[][], enclosure: Coord[]): boolean {
     if (stack.length < 5) {
       debugLog("stack", stack)
     }
-    const curr = stack.pop();
+    const curr = stack.pop()!;
     if (isTile(curr)) {
       // debugLog("curr tile", curr);
       if (curr[0] < 0 || curr[0] >= grid.length || curr[1] < 0 || curr[1] >= grid[0].length) {
