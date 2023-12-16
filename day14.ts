@@ -11,7 +11,7 @@ export {
 function pt1() {
   const data = readFileSync("day14.txt", 'utf8');
   const grid: string[][] = data.split('\n').map(l => l.split(""));
-  console.log("initial grid");
+  // console.log("initial grid");
   // printGrid(grid);
 
   // console.time("tilt");
@@ -79,12 +79,6 @@ function cycle(grid: string[][]) {
   }
 }
 
-type Dir = "N"|"E"|"S"|"W";
-let cache = new Map<string, string>();
-function getCacheKey(rowOrCol: string, dir: Dir): string {
-  return `${rowOrCol}+${dir}`;
-}
-
 function printGrid(grid: string[][]) {
   grid.forEach(r => {
     console.log(r.join(""));
@@ -92,18 +86,33 @@ function printGrid(grid: string[][]) {
 }
 
 function pt2() {
-  const data = readFileSync("day14short.txt", 'utf8');
+  const data = readFileSync("day14.txt", 'utf8');
   const grid: string[][] = data.split('\n').map(l => l.split(""));
-  console.log("initial grid");
-  printGrid(grid);
+  // console.log("initial grid");
+  // printGrid(grid);
 
   console.time("cycles");
-  for (let i = 0; i < 3; i++) {
+  const numCycles = 1100;
+  for (let i = 0; i < numCycles; i++) {
     cycle(grid);
+    if (i < 1000) {
+      continue;
+    }
+
+    let load = 0;
+    for (let r = 0; r < grid.length; r++) {
+      for (let c = 0; c < grid[0].length; c++) {
+        if (grid[r][c] === "O") {
+          load += grid.length-r;
+        }
+      }
+    }
+    console.log("cycle", i, i%9, "load", load);
   }
   console.timeEnd("cycles");
-  console.log("after cycles");
-  printGrid(grid);
+  console.log("completed cycles: ", numCycles);
+  // console.log("after cycles");
+  // printGrid(grid);
 
   let load = 0;
   for (let r = 0; r < grid.length; r++) {
