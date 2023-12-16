@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { pt1, pt2, tests } from "./day15";
+import { pt1, pt2, tests } from "./day16";
 const {
     values: { cmd, input  },
 } = parseArgs({
