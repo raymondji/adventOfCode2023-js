@@ -25,9 +25,7 @@ export function run({
     if (input === undefined) {
         throw new Error("Missing input");
     }
-    console.log("got dirname", dirname);
     const inputPath = path.resolve(dirname, input);
-    console.log("got inputPath", inputPath);
     if (cmd === "pt1" ) {
         console.log("---- PT.1 ----");
         if (pt1) {
