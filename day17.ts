@@ -17,15 +17,76 @@ function pt1(input: string) {
     .map(l => l.split("").map(c => parseInt(c)));
   printGrid("original", grid);
 
-  const results = minHeatLossIterative({
+  const start: Node = {
     coord: [0, 0],
     movesStraight: 0,
     straight: E,
     heatLoss: 0,
-  }, grid);
-  // console.log("----results", results);
+  };
+  const unvisited: Node[] = [];
+  unvisited.push(start);
+  for (let movesStraight = 1; movesStraight <= 3; movesStraight++) {
+    for (const straight of [N, E, S, W]) {
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+          unvisited.push({
+            coord: [r, c],
+            movesStraight,
+            straight,
+            heatLoss: Infinity,
+          })
+        }
+      }
+    }
+  }
+  const nodes = new Map<string, Node>();
+  for (const c of unvisited) {
+    nodes.set(toResultsKey(c.coord, c.movesStraight, c.straight), c);
+  }
+
+  while (unvisited.length > 0) {
+    if (unvisited.length % 1000 === 0) {
+      console.log("---unvisited left", unvisited.length);
+      console.timeEnd("visited");
+      console.time("visited");
+    }
+    
+    const minIndex = getMinIndex(unvisited);
+    const curr = unvisited[minIndex];
+    unvisited.splice(minIndex, 1);
+
+    debugLog("curr", curr.coord, "moves", curr.movesStraight, "straight", curr.straight);
+    const rightDir = rotateRight(curr.straight);
+    const leftDir = rotateLeft(curr.straight);
+    const neighbourKeys: string[] = [
+      toResultsKey(
+        add(curr.coord, curr.straight), curr.movesStraight+1, curr.straight),
+      toResultsKey( 
+        add(curr.coord, rightDir), 1, rightDir),
+      toResultsKey(
+        add(curr.coord, leftDir), 1, leftDir),
+    ];
+    const neighbours = neighbourKeys
+      .map(k => nodes.get(k))
+      .filter((n): n is Node => n !== undefined);
+    debugLog("neighbours", neighbours.length);
+    for (let i =0; i < neighbours.length; i++) {
+      const neighbour = neighbours[i];
+      const tile = at(grid, neighbour.coord);
+      if (tile === undefined) throw new Error("WTF");
+      const newPathLoss = curr.heatLoss + tile;
+      if (newPathLoss < neighbour.heatLoss) {
+        debugLog("got cheaper path to", neighbour.coord, tile, "old heatloss", neighbour.heatLoss, "new heatloss", newPathLoss, "from", curr.coord);
+        neighbour.heatLoss = newPathLoss;
+        neighbour.prev = curr;
+      } else {
+        debugLog("got more expensive path to", neighbour.coord, tile, "old heatloss", neighbour.heatLoss, "new heatloss", newPathLoss, "from", curr.coord);
+      }
+    }
+  }
+
   let minEnd: Node|undefined;
-  for (const [_, node] of results) {
+  for (const [_, node] of nodes) {
     if (!equal(node.coord, [grid.length-1, grid[0].length-1])) {
       continue;
     }
@@ -67,78 +128,6 @@ function toStringDir(t: Tuple): string {
     return "V";
   }
   return "X";
-}
-
-let invocations = 0;
-
-function minHeatLossIterative(
-  start: Node, grid: number[][],
-): Map<string, Node> {
-  const unvisited: Node[] = [];
-  unvisited.push(start);
-  for (let movesStraight = 1; movesStraight <= 3; movesStraight++) {
-    for (const straight of [N, E, S, W]) {
-      for (let r = 0; r < grid.length; r++) {
-        for (let c = 0; c < grid[0].length; c++) {
-          unvisited.push({
-            coord: [r, c],
-            movesStraight,
-            straight,
-            heatLoss: Infinity,
-          })
-        }
-      }
-    }
-  }
-  const nodes = new Map<string, Node>();
-  for (const c of unvisited) {
-    nodes.set(toResultsKey(c.coord, c.movesStraight, c.straight), c);
-  }
-  // console.log("nodes", JSON.stringify(nodes));
-  // console.log("unvisited", JSON.stringify(unvisited));
-
-  while (unvisited.length > 0) {
-    if (unvisited.length % 1000 === 0) {
-      console.log("---unvisited left", unvisited.length);
-      console.timeEnd("visited");
-      console.time("visited");
-    }
-    
-    const minIndex = getMinIndex(unvisited);
-    const curr = unvisited[minIndex];
-    unvisited.splice(minIndex, 1);
-
-    // debugLog("-----");
-    debugLog("curr", curr.coord, "moves", curr.movesStraight, "straight", curr.straight);
-    const rightDir = rotateRight(curr.straight);
-    const leftDir = rotateLeft(curr.straight);
-    const neighbourKeys: string[] = [
-      toResultsKey(
-        add(curr.coord, curr.straight), curr.movesStraight+1, curr.straight),
-      toResultsKey( 
-        add(curr.coord, rightDir), 1, rightDir),
-      toResultsKey(
-        add(curr.coord, leftDir), 1, leftDir),
-    ];
-    const neighbours = neighbourKeys
-      .map(k => nodes.get(k))
-      .filter((n): n is Node => n !== undefined);
-    debugLog("neighbours", neighbours.length);
-    for (let i =0; i < neighbours.length; i++) {
-      const neighbour = neighbours[i];
-      const tile = at(grid, neighbour.coord);
-      if (tile === undefined) throw new Error("WTF");
-      const newPathLoss = curr.heatLoss + tile;
-      if (newPathLoss < neighbour.heatLoss) {
-        debugLog("got cheaper path to", neighbour.coord, tile, "old heatloss", neighbour.heatLoss, "new heatloss", newPathLoss, "from", curr.coord);
-        neighbour.heatLoss = newPathLoss;
-        neighbour.prev = curr;
-      } else {
-        debugLog("got more expensive path to", neighbour.coord, tile, "old heatloss", neighbour.heatLoss, "new heatloss", newPathLoss, "from", curr.coord);
-      }
-    }
-  }
-  return nodes;
 }
 
 function getMinIndex(nodes: Node[]): number {
@@ -225,7 +214,95 @@ function toResultsKey(coord: Tuple, movesStraight: number, straight: Tuple): str
 }
 
 function pt2(input: string) {
+  const data = readFileSync(input, 'utf8');
+  const grid: number[][] = data.split('\n')
+    .map(l => l.split("").map(c => parseInt(c)));
 
+  const start: Node = {
+    coord: [0, 0],
+    movesStraight: 0,
+    straight: E,
+    heatLoss: 0,
+  };
+  const unvisited: Node[] = [];
+  unvisited.push(start);
+  for (let movesStraight = 1; movesStraight <= 10; movesStraight++) {
+    for (const straight of [N, E, S, W]) {
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+          unvisited.push({
+            coord: [r, c],
+            movesStraight,
+            straight,
+            heatLoss: Infinity,
+          })
+        }
+      }
+    }
+  }
+  const nodes = new Map<string, Node>();
+  for (const c of unvisited) {
+    nodes.set(toResultsKey(c.coord, c.movesStraight, c.straight), c);
+  }
+
+  while (unvisited.length > 0) {
+    if (unvisited.length % 1000 === 0) {
+      console.log("---unvisited left", unvisited.length);
+      console.timeEnd("visited");
+      console.time("visited");
+    }
+    
+    const minIndex = getMinIndex(unvisited);
+    const curr = unvisited[minIndex];
+    unvisited.splice(minIndex, 1);
+
+    debugLog("curr", curr.coord, "moves", curr.movesStraight, "straight", curr.straight);
+    const rightDir = rotateRight(curr.straight);
+    const leftDir = rotateLeft(curr.straight);
+    const neighbourKeys: string[] = [
+      toResultsKey(
+        add(curr.coord, curr.straight), curr.movesStraight+1, curr.straight),
+    ];
+    if (curr.movesStraight >= 4) {
+      neighbourKeys.push(
+        toResultsKey( 
+          add(curr.coord, rightDir), 1, rightDir),
+        toResultsKey(
+          add(curr.coord, leftDir), 1, leftDir),
+      );
+    }
+
+    const neighbours = neighbourKeys
+      .map(k => nodes.get(k))
+      .filter((n): n is Node => n !== undefined);
+    debugLog("neighbours", neighbours.length);
+    for (let i =0; i < neighbours.length; i++) {
+      const neighbour = neighbours[i];
+      const tile = at(grid, neighbour.coord);
+      if (tile === undefined) throw new Error("WTF");
+      const newPathLoss = curr.heatLoss + tile;
+      if (newPathLoss < neighbour.heatLoss) {
+        debugLog("got cheaper path to", neighbour.coord, tile, "old heatloss", neighbour.heatLoss, "new heatloss", newPathLoss, "from", curr.coord);
+        neighbour.heatLoss = newPathLoss;
+        neighbour.prev = curr;
+      } else {
+        debugLog("got more expensive path to", neighbour.coord, tile, "old heatloss", neighbour.heatLoss, "new heatloss", newPathLoss, "from", curr.coord);
+      }
+    }
+  }
+
+  let minEnd: Node|undefined;
+  for (const [_, node] of nodes) {
+    if (!equal(node.coord, [grid.length-1, grid[0].length-1]) || node.movesStraight < 4) {
+      continue;
+    }
+    if (minEnd === undefined || node.heatLoss < minEnd.heatLoss) {
+      minEnd = node;
+    }
+  }
+  if (minEnd === undefined) throw new Error("WTF");
+  drawPath("min path", minEnd, grid);
+  console.log(minEnd.heatLoss);
 }
 
 function tests() {}

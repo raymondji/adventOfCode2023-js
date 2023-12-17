@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { pt1, pt2, tests } from "./day17";
+
 const {
     values: { cmd, input  },
 } = parseArgs({
@@ -12,7 +13,6 @@ const {
         },
     },
 });
-
 
 if (input === undefined) {
     throw new Error("Missing input");
