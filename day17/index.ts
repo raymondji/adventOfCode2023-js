@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { run } from "../run";
 import { fileURLToPath } from 'url';
 import { dirname } from "path";
@@ -8,8 +7,7 @@ function debugLog(...args: any[]) {
   if (DEBUG) console.log(...args);
 }
 
-function pt1(input: string) {
-  const data = readFileSync(input, 'utf8');
+function pt1(data: string) {
   const grid: number[][] = data.split('\n')
     .map(l => l.split("").map(c => parseInt(c)));
   printGrid("original", grid);
@@ -210,8 +208,7 @@ function toResultsKey(coord: Tuple, movesStraight: number, straight: Tuple): str
   return `${toString(coord)}--${movesStraight}--${toString(straight)}}`;
 }
 
-function pt2(input: string) {
-  const data = readFileSync(input, 'utf8');
+function pt2(data: string) {
   const grid: number[][] = data.split('\n')
     .map(l => l.split("").map(c => parseInt(c)));
 
