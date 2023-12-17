@@ -1,10 +1,7 @@
 import { readFileSync } from 'fs';
-
-export {
-  pt1,
-  pt2,
-  tests,
-}
+import { run } from "../run";
+import { fileURLToPath } from 'url';
+import { dirname } from "path";
 
 const DEBUG = false;
 function debugLog(...args: any[]) {
@@ -305,9 +302,6 @@ function pt2(input: string) {
   console.log(minEnd.heatLoss);
 }
 
-function tests() {}
-
-
 function printGrid(name: string, grid: number[][]) {
   console.log(`----- ${name} -----`);
     const str = grid.map(r => r.map(c => {
@@ -315,3 +309,5 @@ function printGrid(name: string, grid: number[][]) {
     }).join("")).join("\n");
     console.log(str);
 }
+
+run({pt1, pt2}, dirname(fileURLToPath(import.meta.url)));
